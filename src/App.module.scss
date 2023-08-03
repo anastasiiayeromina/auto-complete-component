@@ -1,0 +1,152 @@
+.form {
+  width: 100%;
+  max-width: 375px;
+  margin: -20vh auto 0;
+}
+
+.formgroup {
+  --color-main: rgba(48, 58, 78, 1);
+  --color-white: rgba(255, 255, 255, 1);
+  --color-error: rgba(204, 58, 60, 1);
+  --color-primary: rgba(4, 109, 203, 1);
+  --color-primary-light: rgba(92, 160, 221, 1);
+  --color-primary-lightest: rgba(237, 245, 251, 1);
+  --color-secondary: rgba(108, 114, 139, 1);;
+
+  --border-radius-main: 10px;
+  --border-radius-small: 5px;
+
+  --icon-size: 20px;
+
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.57;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-main);
+}
+
+.input {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 11px 35px 11px 18px;
+  color: var(--color-main);
+  font-weight: 500;
+  background-color: transparent;
+  border: 2px solid rgba(205, 226, 245, 1);
+  border-radius: var(--border-radius-main);
+  background-color: var(--color-white);
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5.83 12.175a.783.783 0 0 1 1.108 0L10 15.236l3.062-3.061a.783.783 0 0 1 1.107 1.107l-3.615 3.616a.783.783 0 0 1-1.108 0l-3.615-3.616a.783.783 0 0 1 0-1.107ZM9.446 3.08a.783.783 0 0 1 1.108 0l3.615 3.616a.783.783 0 1 1-1.107 1.108L10 4.742 6.938 7.804a.783.783 0 1 1-1.107-1.108l3.615-3.615Z' fill='%23303A4E'/%3E%3C/svg%3E");
+  background-size: var(--icon-size) var(--icon-size);
+  background-repeat: no-repeat;
+  background-position: top 50% right 10px;
+  transition: .15s ease-in-out;
+  transition-property: border-color, box-shadow;
+  outline: none;
+
+  &::placeholder {
+    font-weight: 400;
+    color: var(--color-secondary);
+    text-transform: none;
+  }
+
+  &:hover {
+    border-color: var(--color-primary-light);
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+.input-wrapper {
+  position: relative;
+
+  &:focus-within {
+    .input {
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+.clear {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  font-size: 0;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Type=x'%3E%3Cpath id='Vector (Stroke)' fill-rule='evenodd' clip-rule='evenodd' d='M18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289Z' fill='%23303A4E'/%3E%3Cpath id='Vector (Stroke)_2' fill-rule='evenodd' clip-rule='evenodd' d='M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z' fill='%23303A4E'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--color-white);
+  border: 0;
+  border-radius: var(--border-radius-small);
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-light);
+  }
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  max-height: 300px;
+  position: absolute;
+  width: 100%;
+  bottom: -4px;
+  left: 0;
+  transform: translateY(100%);
+  list-style: none;
+  overflow: scroll;
+  background-color: var(--color-white);
+  box-shadow: 0px 6px 20px 0px rgba(15, 63, 222, 0.07);
+  border-radius: var(--border-radius-main);
+}
+
+.option {
+  padding: 10px 4px 10px 18px;
+  color: var(--color-secondary);
+  background-color: transparent;
+  transition: .2s ease;
+
+  &:not(.non-selectable) {
+    cursor: pointer;
+    
+    &:hover,
+    &:focus-visible {
+      color: var(--color-primary);
+      background-color: var(--color-primary-lightest);
+    }
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.error {
+  position: absolute;
+  width: 100%;
+  bottom: -4px;
+  left: 0;
+  transform: translateY(100%);
+  color: var(--color-error);
+}
+
