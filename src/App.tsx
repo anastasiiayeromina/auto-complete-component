@@ -1,9 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styles from './App.module.scss';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+// import { debounce } from "lodash";
+import styles from "./App.module.scss";
 
 // In real words project I'd do the following:
 // - extract Input and FormGoup components to make the code more reusable;
-// - add a debounce to the input to avoid unnecessary requests;
+// - ✅ add a debounce to the input to avoid unnecessary requests;
 // - add a nicer loader;
 // - make use of arrow keys to navigate through the options, instead of tab;
 // - use graphql-codegen to generate types from graphQL API;
@@ -15,9 +22,21 @@ import styles from './App.module.scss';
 // With such API where we can fetch only all the data at once, I'd rather fetch the list once, and then filter it locally.
 // Probably, I should have made use of an API where I can filter the data on the server side in this task...
 
-const INPUT_ID = 'auto_complete_input';
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
+const INPUT_ID = "auto_complete_input";
 // I've gone for a graphql API because I wanted to extract only necessary info about the characters.
-const API_URL = 'https://rickandmortyapi.com/graphql';
+const API_URL = "https://rickandmortyapi.com/graphql";
 const query = `{
   characters {
     results {
@@ -28,10 +47,10 @@ const query = `{
 }`;
 
 enum FetchStatus {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  SUCCESS = 'success',
-  ERROR = 'error',
+  IDLE = "idle",
+  LOADING = "loading",
+  SUCCESS = "success",
+  ERROR = "error",
 }
 
 type TListItem = {
@@ -41,9 +60,9 @@ type TListItem = {
 
 const fetchData = async (): Promise<TListItem[]> => {
   const response = await fetch(API_URL, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       query,
@@ -65,7 +84,7 @@ const App = () => {
 
   const [list, setList] = useState<TListItem[]>([]);
   const [status, setStatus] = useState(FetchStatus.IDLE);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [hasClearButton, setHasClearButton] = useState(false);
 
   const resetList = () => {
@@ -73,24 +92,18 @@ const App = () => {
     setStatus(FetchStatus.IDLE);
   };
 
-  const handleInputChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.value.trimStart();
-
-    setInputValue(value);
-
-    if (!value) {
-      return;
-    }
-
-    const searchQuery = value.toLowerCase();
-
-    if (status !== FetchStatus.ERROR && status !== FetchStatus.LOADING) {
-      setStatus(FetchStatus.LOADING);
-    }
-
+  const getFilteredData = useCallback(async () => {
     try {
+      if (!inputValue) {
+        return;
+      }
+
+      if (status !== FetchStatus.ERROR && status !== FetchStatus.LOADING) {
+        setStatus(FetchStatus.LOADING);
+      }
+
+      const searchQuery = inputValue.toLowerCase();
+
       const data = await fetchData();
       const filteredData = data.reduce<TListItem[]>((accum, { id, name }) => {
         const highlightIndex = searchQuery
@@ -118,6 +131,35 @@ const App = () => {
     } catch (error) {
       setStatus(FetchStatus.ERROR);
     }
+  }, [inputValue, status]);
+
+  const ref = useRef(getFilteredData);
+
+  useEffect(() => {
+    // ref is mutable! ref.current is a reference to the latest getFilteredData
+    ref.current = getFilteredData;
+  }, [getFilteredData]);
+
+  // useCallback won't work here, because it memoizes the function, but we need to update the ref.current on every render.
+  const debouncedCallback = useMemo(() => {
+    // func will be created only once - on mount
+    const func = () => {
+      // ref is mutable! ref.current is a reference to the latest sendRequest
+      ref.current?.();
+    };
+    // debounce the func that was created once, but has access to the latest sendRequest
+    return debounce(func, 500);
+    // no dependencies! never gets updated
+  }, []);
+
+  const handleInputChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = event.target.value.trimStart();
+
+    setInputValue(value);
+
+    debouncedCallback();
   };
 
   const handleOptionSelection = (
@@ -130,28 +172,30 @@ const App = () => {
   };
 
   const handleOptionKeyDown = (event: React.KeyboardEvent<HTMLLIElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       handleOptionSelection(event);
     }
   };
 
   const handleReset = () => {
-    setInputValue('');
+    setInputValue("");
     inputRef.current?.focus();
   };
 
-  const handleResetKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Enter') {
+  const handleResetKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>
+  ) => {
+    if (event.key === "Enter") {
       handleReset();
     }
   };
 
   const handleFormKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
     switch (event.key) {
-      case 'Enter':
+      case "Enter":
         event.preventDefault();
         return;
-      case 'Escape':
+      case "Escape":
         event.preventDefault();
         handleReset();
         return;
@@ -170,18 +214,16 @@ const App = () => {
   return (
     <form className={styles.form} onKeyDown={handleFormKeyDown}>
       <div className={styles.formgroup}>
-        <label
-          htmlFor={INPUT_ID}
-          className={styles.label}>
+        <label htmlFor={INPUT_ID} className={styles.label}>
           Rick and Morty Characters
         </label>
-        <div className={styles['input-wrapper']}>
+        <div className={styles["input-wrapper"]}>
           <input
             ref={inputRef}
             id={INPUT_ID}
-            type='search'
-            autoComplete='off'
-            placeholder='Search for a character'
+            type="search"
+            autoComplete="off"
+            placeholder="Search for a character"
             className={styles.input}
             value={inputValue}
             onChange={handleInputChange}
@@ -189,7 +231,7 @@ const App = () => {
           {status !== FetchStatus.IDLE && status !== FetchStatus.ERROR && (
             <ul className={styles.list}>
               {status === FetchStatus.LOADING && (
-                <li className={`${styles.option} ${styles['non-selectable']}`}>
+                <li className={`${styles.option} ${styles["non-selectable"]}`}>
                   Loading...
                 </li>
               )}
@@ -206,7 +248,9 @@ const App = () => {
                     />
                   ))
                 ) : (
-                  <li className={`${styles.option} ${styles['non-selectable']}`}>
+                  <li
+                    className={`${styles.option} ${styles["non-selectable"]}`}
+                  >
                     No options
                   </li>
                 ))}
@@ -221,10 +265,11 @@ const App = () => {
           )}
           {hasClearButton && (
             <button
-              type='reset'
+              type="reset"
               className={styles.clear}
               onClick={handleReset}
-              onKeyDown={handleResetKeyDown}>
+              onKeyDown={handleResetKeyDown}
+            >
               Clear
             </button>
           )}
